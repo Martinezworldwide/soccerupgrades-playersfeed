@@ -132,6 +132,37 @@ body {
     padding: var(--spacing-lg) 0;
 }
 
+.main-feed-intro {
+    color: var(--text-secondary);
+    margin-bottom: var(--spacing-md);
+    font-size: 1rem;
+}
+
+.showing-count {
+    color: var(--text-secondary);
+    margin-left: var(--spacing-sm);
+}
+
+.load-more-row {
+    display: flex;
+    justify-content: center;
+    margin: var(--spacing-lg) 0;
+}
+.load-more-btn {
+    padding: var(--spacing-sm) var(--spacing-xl);
+    background: var(--primary-color);
+    color: white;
+    border: none;
+    border-radius: var(--radius-md);
+    font-size: 1rem;
+    font-weight: 600;
+    cursor: pointer;
+    transition: background 0.2s;
+}
+.load-more-btn:hover {
+    background: var(--secondary-color);
+}
+
 /* Players Grid */
 .players-grid {
     display: grid;
@@ -164,25 +195,39 @@ body {
     border-bottom: 1px solid var(--border-color);
 }
 
+/* Avatar: image with fallback to initial when Instagram blocks cross-origin */
+.player-avatar-wrap {
+    position: relative;
+    width: 64px;
+    height: 64px;
+    flex-shrink: 0;
+}
+.player-avatar-wrap .player-avatar,
+.player-avatar-wrap .player-avatar-placeholder {
+    position: absolute;
+    inset: 0;
+    width: 64px;
+    height: 64px;
+}
 .player-avatar {
-    width: 60px;
-    height: 60px;
     border-radius: var(--radius-full);
     object-fit: cover;
     border: 2px solid var(--primary-color);
 }
-
 .player-avatar-placeholder {
-    width: 60px;
-    height: 60px;
+    width: 64px;
+    height: 64px;
+    min-width: 64px;
+    min-height: 64px;
     border-radius: var(--radius-full);
     background: linear-gradient(135deg, var(--primary-color), var(--secondary-color));
     display: flex;
     align-items: center;
     justify-content: center;
     color: white;
-    font-size: 1.5rem;
+    font-size: 1.6rem;
     font-weight: 700;
+    border: 2px solid var(--primary-color);
 }
 
 .player-info h3 {
@@ -206,26 +251,20 @@ body {
     padding: var(--spacing-md);
 }
 
-.player-stats {
-    display: flex;
-    justify-content: space-around;
-    margin-bottom: var(--spacing-sm);
-}
-
-.stat {
-    text-align: center;
-}
-
-.stat-value {
-    font-size: 1.2rem;
-    font-weight: 700;
-    color: var(--primary-color);
+.view-feed-btn {
     display: block;
+    text-align: center;
+    padding: var(--spacing-sm) var(--spacing-md);
+    background: var(--primary-color);
+    color: white;
+    text-decoration: none;
+    border-radius: var(--radius-md);
+    font-weight: 600;
+    font-size: 0.95rem;
+    transition: background 0.2s, transform 0.2s;
 }
-
-.stat-label {
-    font-size: 0.8rem;
-    color: var(--text-secondary);
+.view-feed-btn:hover {
+    background: var(--secondary-color);
 }
 
 .player-card-footer {

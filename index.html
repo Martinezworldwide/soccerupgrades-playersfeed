@@ -58,6 +58,7 @@
             <!-- Stats -->
             <div class="stats">
                 <span id="playerCount" class="stat-item">Loading...</span>
+                <span id="showingCount" class="stat-item showing-count"></span>
             </div>
         </div>
     </section>
@@ -74,14 +75,16 @@
         <button onclick="location.reload()" class="retry-button">Retry</button>
     </div>
 
-    <!-- Players Grid -->
+    <!-- Main Feed -->
     <main class="main">
         <div class="container">
+            <p class="main-feed-intro">Browse players and open a profile to see their Instagram feed.</p>
             <div id="playersGrid" class="players-grid">
-                <!-- Player cards populated dynamically -->
+                <!-- Player cards: 20 per page -->
             </div>
-
-            <!-- Empty State -->
+            <div id="loadMoreRow" class="load-more-row" style="display: none;">
+                <button type="button" class="load-more-btn" onclick="loadMorePlayers()">Load more</button>
+            </div>
             <div id="emptyState" class="empty-state" style="display: none;">
                 <p>No players found matching your filters.</p>
             </div>

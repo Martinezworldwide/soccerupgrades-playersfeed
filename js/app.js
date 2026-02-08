@@ -2,6 +2,8 @@
 let allPlayers = [];
 let filteredPlayers = [];
 let teams = [];
+const PAGE_SIZE = 20; // Show 20 profiles per page in main feed
+let visibleCount = PAGE_SIZE;
 
 // Initialize app when DOM is ready
 document.addEventListener('DOMContentLoaded', () => {
@@ -65,6 +67,7 @@ async function fetchPlayers() {
             teams = [];
         }
         filteredPlayers = [...allPlayers];
+        visibleCount = PAGE_SIZE; // Reset when data reloads
         updatePlayerCount();
     } catch (error) {
         console.error('Error fetching players:', error);
@@ -119,12 +122,11 @@ function handleSearch(event) {
                (player.team && player.team.toLowerCase().includes(searchTerm));
     });
     
-    // Apply current team filter if set
     const teamFilter = document.getElementById('teamFilter').value;
     if (teamFilter) {
         filteredPlayers = filteredPlayers.filter(player => player.team === teamFilter);
     }
-    
+    visibleCount = PAGE_SIZE;
     renderPlayers();
     updatePlayerCount();
 }
@@ -136,14 +138,10 @@ function handleTeamFilter(event) {
     const selectedTeam = event.target.value;
     
     if (selectedTeam === '') {
-        // Show all players
         filteredPlayers = [...allPlayers];
     } else {
-        // Filter by team
         filteredPlayers = allPlayers.filter(player => player.team === selectedTeam);
     }
-    
-    // Apply search filter if set
     const searchTerm = document.getElementById('searchInput').value.toLowerCase().trim();
     if (searchTerm) {
         filteredPlayers = filteredPlayers.filter(player => {
@@ -152,7 +150,7 @@ function handleTeamFilter(event) {
                    (player.team && player.team.toLowerCase().includes(searchTerm));
         });
     }
-    
+    visibleCount = PAGE_SIZE;
     renderPlayers();
     updatePlayerCount();
 }
@@ -182,23 +180,39 @@ function handleSort(event) {
 }
 
 /**
- * Render players grid
+ * Render players grid (main feed: show PAGE_SIZE at a time, then Load more)
  */
 function renderPlayers() {
     const grid = document.getElementById('playersGrid');
+    const loadMoreRow = document.getElementById('loadMoreRow');
     const emptyState = document.getElementById('emptyState');
     
     if (filteredPlayers.length === 0) {
         grid.innerHTML = '';
+        if (loadMoreRow) loadMoreRow.style.display = 'none';
         emptyState.style.display = 'block';
         return;
     }
     
     emptyState.style.display = 'none';
+    const toShow = filteredPlayers.slice(0, visibleCount);
+    grid.innerHTML = toShow.map(player => createPlayerCard(player)).join('');
     
-    grid.innerHTML = filteredPlayers.map(player => createPlayerCard(player)).join('');
+    // Load more button row
+    if (loadMoreRow) {
+        if (visibleCount >= filteredPlayers.length) {
+            loadMoreRow.style.display = 'none';
+        } else {
+            loadMoreRow.style.display = 'flex';
+            const btn = loadMoreRow.querySelector('.load-more-btn');
+            const next = Math.min(visibleCount + PAGE_SIZE, filteredPlayers.length);
+            if (btn) btn.textContent = 'Load more (' + (filteredPlayers.length - visibleCount) + ' left)';
+        }
+    }
     
-    // Add click listeners: go to profile page with Instagram embed (same as instagram-gallery-display)
+    updateShowingCount();
+    
+    // Click: go to profile page with Instagram embed
     document.querySelectorAll('.player-card').forEach(card => {
         card.addEventListener('click', () => {
             const username = card.dataset.username;
@@ -208,39 +222,55 @@ function renderPlayers() {
 }
 
 /**
- * Create player card HTML
+ * Show next page of players (Load more)
+ */
+function loadMorePlayers() {
+    visibleCount = Math.min(visibleCount + PAGE_SIZE, filteredPlayers.length);
+    renderPlayers();
+}
+
+/**
+ * Update "Showing X of Y" text
+ */
+function updateShowingCount() {
+    const el = document.getElementById('showingCount');
+    if (!el) return;
+    const showing = Math.min(visibleCount, filteredPlayers.length);
+    if (filteredPlayers.length <= PAGE_SIZE) {
+        el.textContent = '';
+    } else {
+        el.textContent = 'Showing ' + showing + ' of ' + filteredPlayers.length;
+    }
+}
+
+/**
+ * Create player card HTML. Avatar: try image first; on error show initials (Instagram CDN often blocks cross-origin).
  */
 function createPlayerCard(player) {
-    const avatar = player.profileData?.profilePictureUrl
-        ? `<img src="${player.profileData.profilePictureUrl}" alt="${player.displayName}" class="player-avatar">`
-        : `<div class="player-avatar-placeholder">${player.displayName.charAt(0)}</div>`;
-    
-    const followers = player.profileData?.followersCount
-        ? formatNumber(player.profileData.followersCount)
-        : '—';
-    const posts = ''; // Not used with embed; feed is on profile page
+    const displayName = escapeHtml(player.displayName);
+    const initial = (player.displayName || player.username || '?').charAt(0).toUpperCase();
+    const avatarUrl = player.profileData?.profilePictureUrl || '';
+    const hasAvatar = avatarUrl.length > 0;
+    // Wrapper with both img and placeholder; onerror switches to placeholder
+    const avatarHtml = hasAvatar
+        ? `<div class="player-avatar-wrap">
+            <img src="${escapeHtml(avatarUrl)}" alt="${displayName}" class="player-avatar" onerror="this.style.display='none';this.nextElementSibling.style.display='flex';">
+            <div class="player-avatar-placeholder" style="display:none">${initial}</div>
+           </div>`
+        : `<div class="player-avatar-placeholder">${initial}</div>`;
     
     return `
         <div class="player-card" data-username="${player.username}">
             <div class="player-card-header">
-                ${avatar}
+                ${avatarHtml}
                 <div class="player-info">
-                    <h3>${escapeHtml(player.displayName)}</h3>
+                    <h3>${displayName}</h3>
                     <p class="player-team">${escapeHtml(player.team)}</p>
                     ${player.position ? `<p class="player-position">${escapeHtml(player.position)}</p>` : ''}
                 </div>
             </div>
             <div class="player-card-body">
-                <div class="player-stats">
-                    <div class="stat">
-                        <span class="stat-value">${followers}</span>
-                        <span class="stat-label">Followers</span>
-                    </div>
-                    <div class="stat">
-                        <span class="stat-value">View</span>
-                        <span class="stat-label">Feed</span>
-                    </div>
-                </div>
+                <span class="view-feed-btn">View feed</span>
             </div>
             <div class="player-card-footer">
                 @${player.username}
@@ -268,11 +298,12 @@ function populateTeamFilter() {
 }
 
 /**
- * Update player count display
+ * Update player count and showing count
  */
 function updatePlayerCount() {
     const playerCount = document.getElementById('playerCount');
-    playerCount.textContent = `${filteredPlayers.length} player${filteredPlayers.length !== 1 ? 's' : ''}`;
+    if (playerCount) playerCount.textContent = `${filteredPlayers.length} player${filteredPlayers.length !== 1 ? 's' : ''}`;
+    updateShowingCount();
 }
 
 /**
