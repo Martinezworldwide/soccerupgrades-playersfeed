@@ -126,6 +126,21 @@ body {
     font-weight: 500;
 }
 
+.main-feed-link {
+    margin-left: 1rem;
+    padding: 0.35rem 0.75rem;
+    background: var(--primary-color);
+    color: white;
+    text-decoration: none;
+    border-radius: var(--radius-md);
+    font-weight: 600;
+    font-size: 0.9rem;
+}
+.main-feed-link:hover {
+    background: var(--secondary-color);
+    color: white;
+}
+
 /* Main Content */
 .main {
     flex: 1;

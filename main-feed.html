@@ -1,0 +1,115 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Main feed – 20 Instagram feeds</title>
+    <link rel="stylesheet" href="css/styles.css">
+    <style>
+        .main-feed-page .feed-header { text-align: center; margin-bottom: 2rem; }
+        .main-feed-page .feed-header h1 { font-size: 2rem; margin-bottom: 0.5rem; }
+        .main-feed-page .feed-header a { color: var(--primary-color); font-weight: 600; }
+        .main-feed-page .feed-section {
+            background: var(--surface);
+            border-radius: 12px;
+            box-shadow: 0 2px 8px rgba(0,0,0,0.08);
+            margin-bottom: 2rem;
+            overflow: hidden;
+        }
+        .main-feed-page .feed-section-header {
+            padding: 1rem 1.5rem;
+            background: linear-gradient(135deg, var(--primary-color), var(--secondary-color));
+            color: white;
+            display: flex;
+            align-items: center;
+            gap: 1rem;
+        }
+        .main-feed-page .feed-section-header img {
+            width: 48px; height: 48px; border-radius: 50%;
+            object-fit: cover; border: 2px solid white;
+        }
+        .main-feed-page .feed-section-header .avatar-initial {
+            width: 48px; height: 48px; border-radius: 50%;
+            background: rgba(255,255,255,0.3);
+            display: flex; align-items: center; justify-content: center;
+            font-size: 1.25rem; font-weight: 700;
+        }
+        .main-feed-page .feed-section-header .name { font-size: 1.25rem; font-weight: 700; }
+        .main-feed-page .feed-section-header .handle { font-size: 0.95rem; opacity: 0.9; }
+        .main-feed-page .feed-embed-wrap { padding: 1rem; background: #fafafa; }
+        .main-feed-page .feed-embed-wrap iframe {
+            width: 100%; min-height: 560px; border: none; border-radius: 8px;
+            background: white; box-shadow: 0 1px 3px rgba(0,0,0,0.1);
+        }
+        .main-feed-page .loading-feed { padding: 3rem; text-align: center; color: var(--text-secondary); }
+    </style>
+</head>
+<body class="main-feed-page">
+    <header class="header">
+        <div class="container">
+            <a href="index.html" class="back-link" style="display:inline-block;margin-bottom:0.5rem;color:rgba(255,255,255,0.95);text-decoration:none;font-weight:500;">← All players</a>
+            <h1 class="header-title">Main feed</h1>
+            <p class="header-subtitle">20 Instagram feeds – scroll to see all</p>
+        </div>
+    </header>
+
+    <main class="main">
+        <div class="container">
+            <div id="feedContainer" class="feed-container">
+                <div id="feedLoading" class="loading-feed">
+                    <div class="spinner"></div>
+                    <p>Loading 20 feeds...</p>
+                </div>
+                <div id="feedList" style="display: none;"></div>
+            </div>
+        </div>
+    </main>
+
+    <footer class="footer">
+        <div class="container">
+            <p><a href="index.html" style="color:inherit;">Soccer Player Feed</a> – Main feed (20 with images)</p>
+        </div>
+    </footer>
+
+    <script src="js/config.js"></script>
+    <script>
+        const FEED_COUNT = 20;
+
+        async function loadMainFeed() {
+            const listEl = document.getElementById('feedList');
+            const loadingEl = document.getElementById('feedLoading');
+            try {
+                const res = await fetch(API_ENDPOINTS.profiles);
+                if (!res.ok) throw new Error('API error');
+                const data = await res.json();
+                var players = [];
+                if (data && typeof data === 'object') {
+                    for (var team of Object.keys(data)) {
+                        var arr = data[team] || [];
+                        for (var i = 0; i < arr.length; i++) players.push(arr[i]);
+                    }
+                }
+                players = players.slice(0, FEED_COUNT);
+                loadingEl.style.display = 'none';
+                listEl.style.display = 'block';
+                listEl.innerHTML = players.map(function(p) {
+                    var name = (p.full_name || p.username || '').replace(/</g, '&lt;').replace(/>/g, '&gt;');
+                    var username = (p.username || '').replace(/</g, '&lt;');
+                    var initial = (name.charAt(0) || '?').toUpperCase();
+                    var avatar = p.avatar_url && p.avatar_url.length
+                        ? '<div style="position:relative;width:48px;height:48px;flex-shrink:0"><img src="' + p.avatar_url.replace(/"/g, '&quot;') + '" alt="" style="position:absolute;inset:0;width:100%;height:100%;object-fit:cover;border-radius:50%;border:2px solid white" onerror="this.style.display=\'none\';this.nextElementSibling.style.display=\'flex\'"><div class="avatar-initial" style="display:none;position:absolute;inset:0">' + initial + '</div></div>'
+                        : '<div class="avatar-initial">' + initial + '</div>';
+                    return '<section class="feed-section">' +
+                        '<div class="feed-section-header">' + avatar +
+                        '<div><div class="name">' + name + '</div><div class="handle">@' + username + '</div></div></div>' +
+                        '<div class="feed-embed-wrap"><iframe src="https://www.instagram.com/' + encodeURIComponent(username) + '/embed/" title="' + name + '"></iframe></div>' +
+                        '</section>';
+                }).join('');
+            } catch (e) {
+                loadingEl.innerHTML = '<p>Could not load feeds. <a href="index.html">Back to players</a></p>';
+            }
+        }
+        loadMainFeed();
+    </script>
+</body>
+</html>

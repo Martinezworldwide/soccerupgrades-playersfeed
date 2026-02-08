@@ -55,10 +55,10 @@
                 </div>
             </div>
 
-            <!-- Stats -->
+            <!-- Stats + Main feed link -->
             <div class="stats">
                 <span id="playerCount" class="stat-item">Loading...</span>
-                <span id="showingCount" class="stat-item showing-count"></span>
+                <a href="main-feed.html" class="main-feed-link">Main feed (20 feeds)</a>
             </div>
         </div>
     </section>
@@ -75,15 +75,11 @@
         <button onclick="location.reload()" class="retry-button">Retry</button>
     </div>
 
-    <!-- Main Feed -->
+    <!-- Players grid: all at once -->
     <main class="main">
         <div class="container">
-            <p class="main-feed-intro">Browse players and open a profile to see their Instagram feed.</p>
             <div id="playersGrid" class="players-grid">
-                <!-- Player cards: 20 per page -->
-            </div>
-            <div id="loadMoreRow" class="load-more-row" style="display: none;">
-                <button type="button" class="load-more-btn" onclick="loadMorePlayers()">Load more</button>
+                <!-- All player cards -->
             </div>
             <div id="emptyState" class="empty-state" style="display: none;">
                 <p>No players found matching your filters.</p>

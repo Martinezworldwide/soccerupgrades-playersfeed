@@ -2,8 +2,6 @@
 let allPlayers = [];
 let filteredPlayers = [];
 let teams = [];
-const PAGE_SIZE = 20; // Show 20 profiles per page in main feed
-let visibleCount = PAGE_SIZE;
 
 // Initialize app when DOM is ready
 document.addEventListener('DOMContentLoaded', () => {
@@ -67,7 +65,6 @@ async function fetchPlayers() {
             teams = [];
         }
         filteredPlayers = [...allPlayers];
-        visibleCount = PAGE_SIZE; // Reset when data reloads
         updatePlayerCount();
     } catch (error) {
         console.error('Error fetching players:', error);
@@ -126,7 +123,6 @@ function handleSearch(event) {
     if (teamFilter) {
         filteredPlayers = filteredPlayers.filter(player => player.team === teamFilter);
     }
-    visibleCount = PAGE_SIZE;
     renderPlayers();
     updatePlayerCount();
 }
@@ -150,7 +146,6 @@ function handleTeamFilter(event) {
                    (player.team && player.team.toLowerCase().includes(searchTerm));
         });
     }
-    visibleCount = PAGE_SIZE;
     renderPlayers();
     updatePlayerCount();
 }
@@ -180,67 +175,27 @@ function handleSort(event) {
 }
 
 /**
- * Render players grid (main feed: show PAGE_SIZE at a time, then Load more)
+ * Render players grid - all players at once (button system)
  */
 function renderPlayers() {
     const grid = document.getElementById('playersGrid');
-    const loadMoreRow = document.getElementById('loadMoreRow');
     const emptyState = document.getElementById('emptyState');
     
     if (filteredPlayers.length === 0) {
         grid.innerHTML = '';
-        if (loadMoreRow) loadMoreRow.style.display = 'none';
-        emptyState.style.display = 'block';
+        if (emptyState) emptyState.style.display = 'block';
         return;
     }
     
-    emptyState.style.display = 'none';
-    const toShow = filteredPlayers.slice(0, visibleCount);
-    grid.innerHTML = toShow.map(player => createPlayerCard(player)).join('');
+    if (emptyState) emptyState.style.display = 'none';
+    grid.innerHTML = filteredPlayers.map(player => createPlayerCard(player)).join('');
     
-    // Load more button row
-    if (loadMoreRow) {
-        if (visibleCount >= filteredPlayers.length) {
-            loadMoreRow.style.display = 'none';
-        } else {
-            loadMoreRow.style.display = 'flex';
-            const btn = loadMoreRow.querySelector('.load-more-btn');
-            const next = Math.min(visibleCount + PAGE_SIZE, filteredPlayers.length);
-            if (btn) btn.textContent = 'Load more (' + (filteredPlayers.length - visibleCount) + ' left)';
-        }
-    }
-    
-    updateShowingCount();
-    
-    // Click: go to profile page with Instagram embed
     document.querySelectorAll('.player-card').forEach(card => {
         card.addEventListener('click', () => {
             const username = card.dataset.username;
             window.location.href = 'profile.html?username=' + encodeURIComponent(username);
         });
     });
-}
-
-/**
- * Show next page of players (Load more)
- */
-function loadMorePlayers() {
-    visibleCount = Math.min(visibleCount + PAGE_SIZE, filteredPlayers.length);
-    renderPlayers();
-}
-
-/**
- * Update "Showing X of Y" text
- */
-function updateShowingCount() {
-    const el = document.getElementById('showingCount');
-    if (!el) return;
-    const showing = Math.min(visibleCount, filteredPlayers.length);
-    if (filteredPlayers.length <= PAGE_SIZE) {
-        el.textContent = '';
-    } else {
-        el.textContent = 'Showing ' + showing + ' of ' + filteredPlayers.length;
-    }
 }
 
 /**
@@ -298,12 +253,11 @@ function populateTeamFilter() {
 }
 
 /**
- * Update player count and showing count
+ * Update player count
  */
 function updatePlayerCount() {
     const playerCount = document.getElementById('playerCount');
     if (playerCount) playerCount.textContent = `${filteredPlayers.length} player${filteredPlayers.length !== 1 ? 's' : ''}`;
-    updateShowingCount();
 }
 
 /**
