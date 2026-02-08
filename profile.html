@@ -1,0 +1,44 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Player Instagram Feed</title>
+    <link rel="stylesheet" href="css/styles.css">
+    <style>
+        .embed-container { width: 100%; max-width: 900px; margin: 0 auto; min-height: 600px; }
+        .instagram-embed { width: 100%; min-height: 600px; border: none; border-radius: 12px; box-shadow: 0 4px 6px rgba(0,0,0,0.1); }
+        .back-link { display: inline-block; margin-bottom: 1rem; color: var(--primary-color); text-decoration: none; font-weight: 500; }
+        .back-link:hover { text-decoration: underline; }
+    </style>
+</head>
+<body>
+    <header class="header">
+        <div class="container">
+            <a href="index.html" class="back-link">← Back to players</a>
+            <h1 class="header-title" id="pageTitle">Instagram Feed</h1>
+        </div>
+    </header>
+    <main class="main">
+        <div class="container">
+            <div class="embed-container">
+                <!-- Instagram official embed - same as instagram-gallery-display -->
+                <iframe id="instagramEmbed" class="instagram-embed" title="Instagram profile"></iframe>
+            </div>
+        </div>
+    </main>
+    <script>
+        // Read username from query: profile.html?username=leomessi
+        var params = new URLSearchParams(window.location.search);
+        var username = params.get('username');
+        if (username) {
+            document.getElementById('instagramEmbed').src = 'https://www.instagram.com/' + encodeURIComponent(username) + '/embed/';
+            document.getElementById('pageTitle').textContent = '@' + username;
+            document.title = '@' + username + ' - Soccer Player Feed';
+        } else {
+            document.getElementById('instagramEmbed').style.display = 'none';
+            document.getElementById('pageTitle').textContent = 'No player selected';
+        }
+    </script>
+</body>
+</html>

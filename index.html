@@ -1,0 +1,102 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="description" content="Discover and get inspired by Instagram content from top soccer players organized by team">
+    <meta name="keywords" content="soccer, football, instagram, players, MLS, Premier League, La Liga">
+    <title>Soccer Player Instagram Feed</title>
+    
+    <!-- Open Graph / Social Media -->
+    <meta property="og:type" content="website">
+    <meta property="og:title" content="Soccer Player Instagram Feed">
+    <meta property="og:description" content="Browse Instagram content from 100+ professional soccer players">
+    
+    <link rel="stylesheet" href="css/styles.css">
+</head>
+<body>
+    <!-- Header -->
+    <header class="header">
+        <div class="container">
+            <h1 class="header-title">Soccer Player Feed</h1>
+            <p class="header-subtitle">Get inspired by content from top soccer players</p>
+        </div>
+    </header>
+
+    <!-- Filters Section -->
+    <section class="filters">
+        <div class="container">
+            <div class="filter-group">
+                <!-- Search -->
+                <div class="search-box">
+                    <input 
+                        type="text" 
+                        id="searchInput" 
+                        placeholder="Search players..."
+                        aria-label="Search players"
+                    >
+                </div>
+
+                <!-- Team Filter -->
+                <div class="team-filter">
+                    <select id="teamFilter" aria-label="Filter by team">
+                        <option value="">All Teams</option>
+                        <!-- Populated dynamically -->
+                    </select>
+                </div>
+
+                <!-- Sort -->
+                <div class="sort-filter">
+                    <select id="sortFilter" aria-label="Sort players">
+                        <option value="name">Name (A-Z)</option>
+                        <option value="team">Team</option>
+                        <option value="posts">Most Posts</option>
+                    </select>
+                </div>
+            </div>
+
+            <!-- Stats -->
+            <div class="stats">
+                <span id="playerCount" class="stat-item">Loading...</span>
+            </div>
+        </div>
+    </section>
+
+    <!-- Loading State -->
+    <div id="loadingSpinner" class="loading-container">
+        <div class="spinner"></div>
+        <p>Loading players...</p>
+    </div>
+
+    <!-- Error State -->
+    <div id="errorMessage" class="error-container" style="display: none;">
+        <p class="error-text"></p>
+        <button onclick="location.reload()" class="retry-button">Retry</button>
+    </div>
+
+    <!-- Players Grid -->
+    <main class="main">
+        <div class="container">
+            <div id="playersGrid" class="players-grid">
+                <!-- Player cards populated dynamically -->
+            </div>
+
+            <!-- Empty State -->
+            <div id="emptyState" class="empty-state" style="display: none;">
+                <p>No players found matching your filters.</p>
+            </div>
+        </div>
+    </main>
+
+    <!-- Footer -->
+    <footer class="footer">
+        <div class="container">
+            <p>Soccer Player Instagram Feed - Inspiration from the best</p>
+            <p class="footer-note">This site displays public Instagram content from professional soccer players</p>
+        </div>
+    </footer>
+
+    <script src="js/config.js"></script>
+    <script src="js/app.js"></script>
+</body>
+</html>
