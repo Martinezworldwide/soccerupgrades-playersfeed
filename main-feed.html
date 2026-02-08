@@ -38,10 +38,21 @@
         .main-feed-page .feed-section-header .handle { font-size: 0.95rem; opacity: 0.9; }
         .main-feed-page .feed-embed-wrap { padding: 1rem; background: #fafafa; }
         .main-feed-page .feed-embed-wrap iframe {
-            width: 100%; min-height: 560px; border: none; border-radius: 8px;
+            width: 100%; min-height: 900px; border: none; border-radius: 8px;
             background: white; box-shadow: 0 1px 3px rgba(0,0,0,0.1);
         }
         .main-feed-page .loading-feed { padding: 3rem; text-align: center; color: var(--text-secondary); }
+        .main-feed-page .pagination {
+            display: flex; align-items: center; justify-content: center; gap: 1rem;
+            margin: 2rem 0; flex-wrap: wrap;
+        }
+        .main-feed-page .pagination .page-info { font-weight: 600; color: var(--text-primary); }
+        .main-feed-page .pagination button {
+            padding: 0.5rem 1.25rem; border: none; border-radius: 8px;
+            background: var(--primary-color); color: white; font-weight: 600; cursor: pointer;
+        }
+        .main-feed-page .pagination button:hover:not(:disabled) { background: var(--secondary-color); }
+        .main-feed-page .pagination button:disabled { opacity: 0.5; cursor: not-allowed; }
     </style>
 </head>
 <body class="main-feed-page">
@@ -49,7 +60,7 @@
         <div class="container">
             <a href="index.html" class="back-link" style="display:inline-block;margin-bottom:0.5rem;color:rgba(255,255,255,0.95);text-decoration:none;font-weight:500;">← All players</a>
             <h1 class="header-title">Main feed</h1>
-            <p class="header-subtitle">20 Instagram feeds – scroll to see all</p>
+            <p class="header-subtitle">20 feeds per page – use Next to see more</p>
         </div>
     </header>
 
@@ -61,6 +72,11 @@
                     <p>Loading 20 feeds...</p>
                 </div>
                 <div id="feedList" style="display: none;"></div>
+                <div id="paginationRow" class="pagination" style="display: none;">
+                    <button type="button" id="btnPrev">Previous</button>
+                    <span class="page-info" id="pageInfo">Page 1 of 1</span>
+                    <button type="button" id="btnNext">Next</button>
+                </div>
             </div>
         </div>
     </main>
@@ -73,38 +89,66 @@
 
     <script src="js/config.js"></script>
     <script>
-        const FEED_COUNT = 20;
+        var ALL_PLAYERS = [];
+        var CURRENT_PAGE = 0;
+        var PAGE_SIZE = 20;
+        var TOTAL_PAGES = 1;
+        // Instagram embed: try max_posts to request more photos (Instagram may ignore this)
+        var EMBED_PARAMS = '?max_posts=100';
+
+        function renderFeedSection(p) {
+            var name = (p.full_name || p.username || '').replace(/</g, '&lt;').replace(/>/g, '&gt;');
+            var username = (p.username || '').replace(/</g, '&lt;');
+            var initial = (name.charAt(0) || '?').toUpperCase();
+            var avatar = p.avatar_url && p.avatar_url.length
+                ? '<div style="position:relative;width:48px;height:48px;flex-shrink:0"><img src="' + p.avatar_url.replace(/"/g, '&quot;') + '" alt="" style="position:absolute;inset:0;width:100%;height:100%;object-fit:cover;border-radius:50%;border:2px solid white" onerror="this.style.display=\'none\';this.nextElementSibling.style.display=\'flex\'"><div class="avatar-initial" style="display:none;position:absolute;inset:0">' + initial + '</div></div>'
+                : '<div class="avatar-initial">' + initial + '</div>';
+            var embedUrl = 'https://www.instagram.com/' + encodeURIComponent(username) + '/embed/' + EMBED_PARAMS;
+            return '<section class="feed-section">' +
+                '<div class="feed-section-header">' + avatar +
+                '<div><div class="name">' + name + '</div><div class="handle">@' + username + '</div></div></div>' +
+                '<div class="feed-embed-wrap"><iframe src="' + embedUrl + '" title="' + name + '"></iframe></div>' +
+                '</section>';
+        }
+
+        function renderPage() {
+            var listEl = document.getElementById('feedList');
+            var paginationRow = document.getElementById('paginationRow');
+            var start = CURRENT_PAGE * PAGE_SIZE;
+            var slice = ALL_PLAYERS.slice(start, start + PAGE_SIZE);
+            listEl.innerHTML = slice.map(renderFeedSection).join('');
+            document.getElementById('pageInfo').textContent = 'Page ' + (CURRENT_PAGE + 1) + ' of ' + TOTAL_PAGES;
+            document.getElementById('btnPrev').disabled = CURRENT_PAGE === 0;
+            document.getElementById('btnNext').disabled = CURRENT_PAGE >= TOTAL_PAGES - 1;
+            paginationRow.style.display = TOTAL_PAGES > 1 ? 'flex' : 'none';
+            window.scrollTo(0, 0);
+        }
 
         async function loadMainFeed() {
-            const listEl = document.getElementById('feedList');
-            const loadingEl = document.getElementById('feedLoading');
+            var listEl = document.getElementById('feedList');
+            var loadingEl = document.getElementById('feedLoading');
             try {
-                const res = await fetch(API_ENDPOINTS.profiles);
+                var res = await fetch(API_ENDPOINTS.profiles);
                 if (!res.ok) throw new Error('API error');
-                const data = await res.json();
-                var players = [];
+                var data = await res.json();
+                ALL_PLAYERS = [];
                 if (data && typeof data === 'object') {
                     for (var team of Object.keys(data)) {
                         var arr = data[team] || [];
-                        for (var i = 0; i < arr.length; i++) players.push(arr[i]);
+                        for (var i = 0; i < arr.length; i++) ALL_PLAYERS.push(arr[i]);
                     }
                 }
-                players = players.slice(0, FEED_COUNT);
+                TOTAL_PAGES = Math.max(1, Math.ceil(ALL_PLAYERS.length / PAGE_SIZE));
+                CURRENT_PAGE = 0;
                 loadingEl.style.display = 'none';
                 listEl.style.display = 'block';
-                listEl.innerHTML = players.map(function(p) {
-                    var name = (p.full_name || p.username || '').replace(/</g, '&lt;').replace(/>/g, '&gt;');
-                    var username = (p.username || '').replace(/</g, '&lt;');
-                    var initial = (name.charAt(0) || '?').toUpperCase();
-                    var avatar = p.avatar_url && p.avatar_url.length
-                        ? '<div style="position:relative;width:48px;height:48px;flex-shrink:0"><img src="' + p.avatar_url.replace(/"/g, '&quot;') + '" alt="" style="position:absolute;inset:0;width:100%;height:100%;object-fit:cover;border-radius:50%;border:2px solid white" onerror="this.style.display=\'none\';this.nextElementSibling.style.display=\'flex\'"><div class="avatar-initial" style="display:none;position:absolute;inset:0">' + initial + '</div></div>'
-                        : '<div class="avatar-initial">' + initial + '</div>';
-                    return '<section class="feed-section">' +
-                        '<div class="feed-section-header">' + avatar +
-                        '<div><div class="name">' + name + '</div><div class="handle">@' + username + '</div></div></div>' +
-                        '<div class="feed-embed-wrap"><iframe src="https://www.instagram.com/' + encodeURIComponent(username) + '/embed/" title="' + name + '"></iframe></div>' +
-                        '</section>';
-                }).join('');
+                renderPage();
+                document.getElementById('btnPrev').onclick = function() {
+                    if (CURRENT_PAGE > 0) { CURRENT_PAGE--; renderPage(); }
+                };
+                document.getElementById('btnNext').onclick = function() {
+                    if (CURRENT_PAGE < TOTAL_PAGES - 1) { CURRENT_PAGE++; renderPage(); }
+                };
             } catch (e) {
                 loadingEl.innerHTML = '<p>Could not load feeds. <a href="index.html">Back to players</a></p>';
             }
