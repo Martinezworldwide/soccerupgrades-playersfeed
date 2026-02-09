@@ -81,18 +81,28 @@
             var apiUrl = API_BASE_URL + '/api/facebook/page/leomessi/posts?limit=50';
 
             fetch(apiUrl)
-                .then(function(r) { return r.json().then(function(d) { return { ok: r.ok, data: d }; }); })
+                .then(function(r) {
+                    return r.json().then(function(d) { return { ok: r.ok, status: r.status, data: d }; }).catch(function() {
+                        return { ok: false, status: r.status, data: { detail: r.status === 404 ? 'Route not found' : 'Server error' } };
+                    });
+                })
                 .then(function(result) {
                     loading.style.display = 'none';
                     if (!result.ok) {
                         errorEl.style.display = 'block';
-                        errorEl.textContent = result.data.detail || result.data.error || 'Failed to load Facebook posts. Check backend env (FACEBOOK_APP_ID, FACEBOOK_APP_SECRET).';
+                        var msg = result.data.detail || result.data.error || 'Failed to load Facebook posts.';
+                        if (result.status === 404 || (msg && msg.toLowerCase().indexOf('not found') !== -1)) {
+                            msg = 'Backend route not found. Push the backend repo (soccerupgrades-playersfeed-backend) to GitHub and redeploy on Render so the Facebook API routes are live. Then set FACEBOOK_APP_ID and FACEBOOK_APP_SECRET in Render Environment.';
+                        } else {
+                            msg = msg + ' Check FACEBOOK_APP_ID and FACEBOOK_APP_SECRET in Render.';
+                        }
+                        errorEl.textContent = msg;
                         return;
                     }
                     var posts = result.data.posts || [];
                     if (posts.length === 0) {
                         errorEl.style.display = 'block';
-                        errorEl.textContent = 'No posts returned. The Page may require a Page Access Token (not just App Token).';
+                        errorEl.textContent = result.data.message || 'No posts returned. The Page may require a Page Access Token (not just App Token).';
                         return;
                     }
                     container.style.display = 'grid';
