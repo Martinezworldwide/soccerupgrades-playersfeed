@@ -1,0 +1,120 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Leo Messi – Facebook feed</title>
+    <link rel="stylesheet" href="css/styles.css">
+    <style>
+        .fb-feed-page .intro { margin-bottom: 1.5rem; color: var(--text-secondary); }
+        .fb-feed-page .posts-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
+            gap: 1rem;
+        }
+        .fb-feed-page .post-card {
+            background: var(--surface);
+            border-radius: 12px;
+            overflow: hidden;
+            box-shadow: 0 2px 8px rgba(0,0,0,0.08);
+        }
+        .fb-feed-page .post-card img {
+            width: 100%;
+            height: 280px;
+            object-fit: cover;
+        }
+        .fb-feed-page .post-card .post-body { padding: 1rem; }
+        .fb-feed-page .post-card .post-message {
+            font-size: 0.95rem;
+            color: var(--text-primary);
+            display: -webkit-box;
+            -webkit-line-clamp: 3;
+            -webkit-box-orient: vertical;
+            overflow: hidden;
+        }
+        .fb-feed-page .post-card .post-time { font-size: 0.85rem; color: var(--text-secondary); margin-top: 0.5rem; }
+        .fb-feed-page .post-card a.post-link {
+            display: inline-block;
+            margin-top: 0.5rem;
+            color: var(--primary-color);
+            font-weight: 600;
+            text-decoration: none;
+        }
+        .fb-feed-page .post-card a.post-link:hover { text-decoration: underline; }
+        .fb-feed-page .error, .fb-feed-page .loading { text-align: center; padding: 2rem; color: var(--text-secondary); }
+        .fb-feed-page .error { color: var(--error-color); }
+    </style>
+</head>
+<body class="fb-feed-page">
+    <header class="header">
+        <div class="container">
+            <a href="index.html" style="display:inline-block;margin-bottom:0.5rem;color:rgba(255,255,255,0.95);text-decoration:none;font-weight:500;">← All players</a>
+            <h1 class="header-title">Leo Messi – Facebook feed</h1>
+            <p class="header-subtitle">Posts from his official Facebook Page (API test)</p>
+        </div>
+    </header>
+
+    <main class="main">
+        <div class="container">
+            <p class="intro">This page loads posts from Leo Messi’s Facebook Page via the Facebook Graph API. Backend must have FACEBOOK_APP_ID and FACEBOOK_APP_SECRET set.</p>
+            <div id="loading" class="loading">
+                <div class="spinner"></div>
+                <p>Loading Facebook posts...</p>
+            </div>
+            <div id="error" class="error" style="display:none;"></div>
+            <div id="postsContainer" class="posts-grid" style="display:none;"></div>
+        </div>
+    </main>
+
+    <footer class="footer">
+        <div class="container">
+            <p><a href="index.html" style="color:inherit;">Soccer Player Feed</a></p>
+        </div>
+    </footer>
+
+    <script src="js/config.js"></script>
+    <script>
+        (function() {
+            var loading = document.getElementById('loading');
+            var errorEl = document.getElementById('error');
+            var container = document.getElementById('postsContainer');
+            var apiUrl = API_BASE_URL + '/api/facebook/page/leomessi/posts?limit=50';
+
+            fetch(apiUrl)
+                .then(function(r) { return r.json().then(function(d) { return { ok: r.ok, data: d }; }); })
+                .then(function(result) {
+                    loading.style.display = 'none';
+                    if (!result.ok) {
+                        errorEl.style.display = 'block';
+                        errorEl.textContent = result.data.detail || result.data.error || 'Failed to load Facebook posts. Check backend env (FACEBOOK_APP_ID, FACEBOOK_APP_SECRET).';
+                        return;
+                    }
+                    var posts = result.data.posts || [];
+                    if (posts.length === 0) {
+                        errorEl.style.display = 'block';
+                        errorEl.textContent = 'No posts returned. The Page may require a Page Access Token (not just App Token).';
+                        return;
+                    }
+                    container.style.display = 'grid';
+                    container.innerHTML = posts.map(function(p) {
+                        var img = p.full_picture
+                            ? '<img src="' + p.full_picture.replace(/"/g, '&quot;') + '" alt="" loading="lazy">'
+                            : '';
+                        var msg = (p.message || '').replace(/</g, '&lt;').replace(/>/g, '&gt;').substring(0, 200);
+                        var link = p.permalink_url || '#';
+                        var time = p.created_time ? new Date(p.created_time).toLocaleDateString() : '';
+                        return '<div class="post-card">' + img +
+                            '<div class="post-body"><div class="post-message">' + msg + '</div>' +
+                            '<div class="post-time">' + time + '</div>' +
+                            '<a href="' + link + '" target="_blank" rel="noopener" class="post-link">View on Facebook</a></div></div>';
+                    }).join('');
+                })
+                .catch(function(e) {
+                    loading.style.display = 'none';
+                    errorEl.style.display = 'block';
+                    errorEl.textContent = 'Network error: ' + e.message;
+                });
+        })();
+    </script>
+</body>
+</html>

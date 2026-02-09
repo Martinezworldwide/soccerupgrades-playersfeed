@@ -60,7 +60,7 @@
         <div class="container">
             <a href="index.html" class="back-link" style="display:inline-block;margin-bottom:0.5rem;color:rgba(255,255,255,0.95);text-decoration:none;font-weight:500;">← All players</a>
             <h1 class="header-title">Main feed</h1>
-            <p class="header-subtitle">20 feeds per page – use Next to see more</p>
+            <p class="header-subtitle">20 feeds per page – each shows a preview; open Instagram for full feed</p>
         </div>
     </header>
 
@@ -93,8 +93,8 @@
         var CURRENT_PAGE = 0;
         var PAGE_SIZE = 20;
         var TOTAL_PAGES = 1;
-        // Instagram embed: try max_posts to request more photos (Instagram may ignore this)
-        var EMBED_PARAMS = '?max_posts=100';
+        // Instagram embed shows a short preview only (~6 posts). Full feed is on Instagram.
+        var EMBED_PARAMS = '';
 
         function renderFeedSection(p) {
             var name = (p.full_name || p.username || '').replace(/</g, '&lt;').replace(/>/g, '&gt;');
